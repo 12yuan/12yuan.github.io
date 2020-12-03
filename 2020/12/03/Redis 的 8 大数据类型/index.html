@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html  lang="zh-CN" >
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="theme-color" content="#fff" id="theme-color">
+  <meta name="description" content="IT小猪">
+  <link rel="icon" href="/img/Kaze.png">
+  <title>Redis</title>
+  
+  
+  <meta property="og:title" content="Redis">
+  
+  
+  <meta property="og:url" content="https://12yuan.github.io/2020/12/03/Redis%20%E7%9A%84%208%20%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/index.html">
+  
+  
+  <meta property="og:img" content="/img/Kaze.png">
+  
+  
+  
+  <meta property="og:type" content="article">
+  <meta property="og:article:published_time" content="2020-12-03">
+  <meta property="og:article:modified_time" content="2020-12-03">
+  <meta property="og:article:author" content="theme-kaze">
+  
+  
+  <meta property="og:article:tag" content="Redis">
+  
+  <meta property="og:article:tag" content="数据类型">
+  
+  
+  
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+    var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+      }
+    };
+    setDarkmode();
+  </script>
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  </script>
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  
+  <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+  <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+  <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+  
+  
+<link rel="stylesheet" href="/css/main.css">
+
+  
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+
+  
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+
+  
+  
+<link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 5.2.0"></head>
+
+
+<body>
+  <div class="wrapper">
+    
+    <nav class="navbar">
+  <div class="navbar-logo">
+    <span class="navbar-logo-main">
+      
+      <img class="navbar-logo-img" src="/img/Kaze.png" alt="logo">
+      
+      <span class="navbar-logo-dsc">theme-kaze demo</span>
+    </span>
+  </div>
+  <div class="navbar-menu">
+    
+    <a href="/" class="navbar-menu-item">
+    
+    首页
+    
+    </a>
+    
+    <a href="/archives" class="navbar-menu-item">
+    
+    归档
+    
+    </a>
+    
+    <a href="/tags" class="navbar-menu-item">
+    
+    标签
+    
+    </a>
+    
+    <a href="/categories" class="navbar-menu-item">
+    
+    分类
+    
+    </a>
+    
+    <a href="/about" class="navbar-menu-item">
+    
+    关于
+    
+    </a>
+    
+    <a href="/links" class="navbar-menu-item">
+    
+    友链
+    
+    </a>
+    
+    <a class="navbar-menu-item darknavbar" id="dark"><i class="iconfont icon-weather"></i></a>
+    <a class="navbar-menu-item searchnavbar" id="search"><i class="iconfont icon-search" style="font-size: 1.2rem; font-weight: 400;"></i></a>
+  </div>
+</nav>
+    
+    <div id="local-search" style="display: none;">
+      <input class="navbar-menu-item" id="search-input" placeholder="请输入搜索内容...">
+      <div id="search-content"></div>
+    </div>
+    
+    <div class="section-wrap">
+      <div class="container">
+        <div class="columns">
+          <main class="main-column">
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      Redis
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2020-12-03T08:51:38.882Z">
+      <i class="iconfont icon-calendar" style="margin-right: 2px;"></i>
+      <span>2020-12-03</span>
+    </time>
+    
+    <span class="dot"></span>
+    
+    <a href="/categories/Redis/" class="post-meta-link">Redis</a>
+    
+    
+    
+    <span class="dot"></span>
+    <span>5k 字</span>
+    
+  </div>
+  
+  <div class="post-meta post-show-meta" style="margin-top: -10px;">
+    <div style="display: flex; align-items: center;">
+      <i class="iconfont icon-biaoqian" style="margin-right: 2px; font-size: 1.15rem;"></i>
+      
+      
+        <a href="/tags/Redis/" class="post-meta-link">Redis</a>
+      
+      
+      <span class="dot"></span>
+      
+        <a href="/tags/数据类型/" class="post-meta-link">数据类型</a>
+      
+    </div>
+  </div>
+  
+  </header>
+  <div id="section" class="post-content">
+    <p>[TOC]</p>
+<h2 id="Redis-的八大数据类型"><a href="#Redis-的八大数据类型" class="headerlink" title="Redis 的八大数据类型"></a>Redis 的八大数据类型</h2><p>官网可查看命令：<a target="_blank" rel="noopener" href="http://www.redis.cn/commands.html">http://www.redis.cn/commands.html</a></p>
+<h3 id="Redis-key"><a href="#Redis-key" class="headerlink" title="Redis-key"></a>Redis-key</h3><pre class="highlight"><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">(empty list or set)</span><br><span class="line">127.0.0.1:6379&gt; set name xxx</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) &quot;name&quot;127.0.0.1:6379&gt; set age 1</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) &quot;age&quot;2) &quot;name&quot;127.0.0.1:6379&gt; exists name  # 判断key 是否存在(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; exists name1</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; move name 1</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) &quot;age&quot;127.0.0.1:6379&gt; set name yyy</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; expire name 10  # 设置key的过期时间，单位是秒(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; ttl name  # 查看当前key的剩余过期时间(integer) 7</span><br><span class="line">127.0.0.1:6379&gt; ttl name</span><br><span class="line">(integer) -2</span><br><span class="line">127.0.0.1:6379&gt; type age  # 查看当前key的类型string</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>Redis 有以下 8 种数据类型</p>
+<h3 id="1、String（字符串）"><a href="#1、String（字符串）" class="headerlink" title="1、String（字符串）"></a>1、String（字符串）</h3><pre class="highlight"><span class="line">127.0.0.1:6379&gt; set key1 v1   #设置值OK</span><br><span class="line">127.0.0.1:6379&gt; get key1&quot;v1&quot;127.0.0.1:6379&gt; append key1 &quot;hello&quot;  # 追加值，如果不存在，相当于 set key(integer) 7</span><br><span class="line">127.0.0.1:6379&gt; get key1&quot;v1hello&quot;127.0.0.1:6379&gt; strlen key1  # 获取字符串长度(integer) 7</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>自增、自减</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; set views 0</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; get views&quot;0&quot;127.0.0.1:6379&gt; incr views  # 自增 1(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; get views&quot;1&quot;127.0.0.1:6379&gt; decr views       # 自减 1(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; decr views</span><br><span class="line">(integer) -1</span><br><span class="line">127.0.0.1:6379&gt; get views&quot;-1&quot;127.0.0.1:6379&gt; incrby views 10  # 设置步长、自增 10 (integer) 9</span><br><span class="line">127.0.0.1:6379&gt; decrby views 5      # 设置步长、自减 5(integer) 4</span><br></pre>
+
+<p>字符串范围</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; set key1 &quot;hello,world!&quot;OK</span><br><span class="line">127.0.0.1:6379&gt; get key1&quot;hello,world!&quot;127.0.0.1:6379&gt; getrange key1 0 3  # 截取字符串\[0, 3\]&quot;hell&quot;127.0.0.1:6379&gt; getrange key1 0 -1  # 获取全部的字符串，和 get key一样&quot;hello,world!&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>替换：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; set key2 abcdefg</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; get key2&quot;abcdefg&quot;127.0.0.1:6379&gt; setrange key2 1 xx</span><br><span class="line">(integer) 7</span><br><span class="line">127.0.0.1:6379&gt; get key2&quot;axxdefg&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p><code>setex(set with expire)</code>：设置过期时间</p>
+<p>和<code>setnx(set if not exist)</code>：不存在再设置（在<a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzI3ODcxMzQzMw==&mid=2247501245&idx=2&sn=c83d68207edd8b110f4afd7dcbf6606d&chksm=eb50408bdc27c99d22451704e0bb7eeed82c3810d2e0dac981436ceb515e573a03c3b4ae68b7&scene=21#wechat_redirect"><strong>分布式锁</strong></a>中会经常使用）</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; setex key3 30 &quot;hello&quot;  # 设置 30 秒后过期OK</span><br><span class="line">127.0.0.1:6379&gt; ttl key3     # 剩余过期时间(integer) 25</span><br><span class="line">127.0.0.1:6379&gt; setnx mykey &quot;redis&quot;   # mykey 不存在时设置成功(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) &quot;key2&quot;2) &quot;key1&quot;3) &quot;views&quot;4) &quot;mykey&quot;127.0.0.1:6379&gt; setnx mykey &quot;mongoDB&quot;  # mykey 存在时设置失败(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; get mykey     # mykey 值不变&quot;redis&quot;127.0.0.1:6379&gt;</span><br><span class="line">mset&#96; 和 &#96;mget</span><br><span class="line">127.0.0.1:6379&gt; mset k1 v1 k2 v2 k3 v3  # 同时设置多个值OK</span><br><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) &quot;k1&quot;2) &quot;k3&quot;3) &quot;k2&quot;127.0.0.1:6379&gt; mget k1 k2 k3   # 同时获取多个值1) &quot;v1&quot;2) &quot;v2&quot;3) &quot;v3&quot;127.0.0.1:6379&gt; msetnx k1 v1 k4 v4       # msetnx 是一个原子性的操作，要么一起成功，要么都失败(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; get k4</span><br><span class="line">(nil)</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>对象</p>
+<pre class="highlight"><span class="line">set user:1 &#123;name:zhangsan, age:3&#125;     # 设置一个 user:1 对象 值为 json  字符来保存一个对象127.0.0.1:6379&gt; mset user:1:name zhangsan user:1:age 2</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; mget user:1:name user:1:age</span><br><span class="line">1) &quot;zhangsan&quot;2) &quot;2&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p><code>getset</code>：先 get 再 set</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; getset db redis  # 如果不存在值，则返回 nil(nil)</span><br><span class="line">127.0.0.1:6379&gt; get db&quot;redis&quot;127.0.0.1:6379&gt; getset db mongodb  # 如果存在值，获取原来的值，并设置新的值&quot;redis&quot;127.0.0.1:6379&gt; get db&quot;mongodb&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>String 的使用场景：value 除了是字符串以外还可以是数字</p>
+<ul>
+<li>计数器</li>
+<li>统计多单位的数量</li>
+<li>粉丝数</li>
+<li>对象缓存存储</li>
+</ul>
+<h3 id="2、List（列表）"><a href="#2、List（列表）" class="headerlink" title="2、List（列表）"></a>2、List（列表）</h3><p>基本的数据类型，列表。</p>
+<p>在 Redis 中可以把 list 用作栈、队列、阻塞队列。</p>
+<p>list 命令多数以 <code>l</code>开头。</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lpush list one   # 将一个值或者多个值，插入到列表的头部（左）(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; lpush list two</span><br><span class="line">(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; lpush list three </span><br><span class="line">(integer) 3</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 -1   # 查看全部元素1) &quot;three&quot;2) &quot;two&quot;3) &quot;one&quot;127.0.0.1:6379&gt; lrange list 0 1    # 通过区间获取值1) &quot;three&quot;2) &quot;two&quot;127.0.0.1:6379&gt; rpush list right   # 将一个值或者多个值，插入到列表的尾部（右）(integer) 4</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;three&quot;2) &quot;two&quot;3) &quot;one&quot;4) &quot;right&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>弹出 pop</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;!&quot;2) &quot;world&quot;3) &quot;world&quot;4) &quot;hello&quot;127.0.0.1:6379&gt; lpop list  # 移除list的第一个元素&quot;!&quot;127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;world&quot;2) &quot;world&quot;3) &quot;hello&quot;127.0.0.1:6379&gt; rpop list   # 移除list的第一个元素&quot;hello&quot;127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;world&quot;2) &quot;world&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>索引 Lindex</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;hjk&quot;2) &quot;world&quot;3) &quot;world&quot;127.0.0.1:6379&gt; lindex list 1  # 通过下标获取list中的某一个值&quot;world&quot;127.0.0.1:6379&gt; lindex list 0&quot;hjk&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>Llen 长度：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; llen list</span><br><span class="line">(integer) 3</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>移除指定的值：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;hjk&quot;2) &quot;world&quot;3) &quot;world&quot;127.0.0.1:6379&gt; lrem list 1 world  # 移除list集合中指定个数的value，精确匹配(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;hjk&quot;2) &quot;world&quot;127.0.0.1:6379&gt; lpush list hjk</span><br><span class="line">(integer) 3</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;hjk&quot;2) &quot;hjk&quot;3) &quot;world&quot;127.0.0.1:6379&gt; lrem list 2 hjk</span><br><span class="line">(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 -1</span><br><span class="line">1) &quot;world&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>trim 截断</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello1&quot;2) &quot;hello2&quot;3) &quot;hello3&quot;4) &quot;hello4&quot;127.0.0.1:6379&gt; ltrim mylist 1 2 # 通过下标截取指定长度，这个list已经被破坏了，截断之后只剩下截断后的元素OK</span><br><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello2&quot;2) &quot;hello3&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>rpoplpush ：移除列表的最后一个元素，将他移动到新的列表中。</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello1&quot;2) &quot;hello2&quot;3) &quot;hello3&quot;127.0.0.1:6379&gt; rpoplpush mylist myotherlist  # 移除列表的最后一个元素，将他移动到新的列表中。&quot;hello3&quot;127.0.0.1:6379&gt; lrange mylist 0 -1  # 查看原来的列表1) &quot;hello1&quot;2) &quot;hello2&quot;127.0.0.1:6379&gt; lrange myotherlist 0 -1  # 查看目标列表中，确实存在该值1) &quot;hello3&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>lset：将列表中指定下标的值替换为另一个值，更新操作</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; exists list  # 判断这个列表是否存在(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; lset list 0 item  # 如果不存在的话，更新会报错(error) ERR no such key</span><br><span class="line">127.0.0.1:6379&gt; lpush list value1</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; lrange list 0 0 </span><br><span class="line">1) &quot;value1&quot;127.0.0.1:6379&gt; lset list 0 item  # 如果存在，更新当前下标的值OK</span><br><span class="line">127.0.0.1:6379&gt; lset list 1 other  # 如果不存在的话，更新会报错(error) ERR index out of range</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>linsert：将某个具体的value插入到列表中某个元素的前面或者后面</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello1&quot;2) &quot;hello2&quot;127.0.0.1:6379&gt; linsert mylist before &quot;hello2&quot; hello</span><br><span class="line">(integer) 3</span><br><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello1&quot;2) &quot;hello&quot;3) &quot;hello2&quot;127.0.0.1:6379&gt; linsert mylist after &quot;hello2&quot; hello</span><br><span class="line">(integer) 4</span><br><span class="line">127.0.0.1:6379&gt; lrange mylist 0 -1</span><br><span class="line">1) &quot;hello1&quot;2) &quot;hello&quot;3) &quot;hello2&quot;4) &quot;hello&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p><strong>小结</strong>：</p>
+<ul>
+<li>list 实际上是一个链表，前后都可以插入</li>
+<li>如果key不存在，创建新的链表</li>
+<li>如果移除了所有的值，空链表，也代表不存在</li>
+<li>在两边插入或者改动值，效率最高。</li>
+</ul>
+<h3 id="3、Set-（集合）"><a href="#3、Set-（集合）" class="headerlink" title="3、Set （集合）"></a>3、Set （集合）</h3><pre class="highlight"><span class="line">127.0.0.1:6379&gt; sadd myset &quot;hello&quot;  # set 集合中添加元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; sadd myset &quot;world&quot;(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; smembers myset      # 查看指定Set的所有值1) &quot;world&quot;2) &quot;hello&quot;127.0.0.1:6379&gt; sismember myset hello  # 判断某一个值是不是在set中(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; sismember myset hello1</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; scard myset  # 获取集合中的个数(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; sadd myset &quot;hello2&quot;(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; smembers myset   </span><br><span class="line">1) &quot;world&quot;2) &quot;hello2&quot;3) &quot;hello&quot;127.0.0.1:6379&gt; srem myset hello   # 移除元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;world&quot;2) &quot;hello2&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;kkk&quot;2) &quot;world&quot;3) &quot;hjk&quot;4) &quot;hello2&quot;127.0.0.1:6379&gt; srandmember myset   # 随机抽取一个元素&quot;hjk&quot;127.0.0.1:6379&gt; srandmember myset&quot;hello2&quot;127.0.0.1:6379&gt; srandmember myset 2   # 随机抽取指定个数的元素1) &quot;world&quot;2) &quot;hello2&quot;127.0.0.1:6379&gt; srandmember myset 2</span><br><span class="line">1) &quot;hello2&quot;2) &quot;hjk&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;kkk&quot;2) &quot;world&quot;3) &quot;hjk&quot;4) &quot;hello2&quot;127.0.0.1:6379&gt; spop myset  # 随机删除元素&quot;hjk&quot;127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;kkk&quot;2) &quot;world&quot;3) &quot;hello2&quot;127.0.0.1:6379&gt; spop myset&quot;hello2&quot;127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;kkk&quot;2) &quot;world&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;kkk&quot;2) &quot;world&quot;127.0.0.1:6379&gt; sadd myset2 set2</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; smove myset myset2 &quot;kkk&quot;   # 将一个特定的值，移动到另一个set集合中(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; smembers myset</span><br><span class="line">1) &quot;world&quot;127.0.0.1:6379&gt; smembers myset2</span><br><span class="line">1) &quot;kkk&quot;2) &quot;set2&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; smembers key1</span><br><span class="line">1) &quot;b&quot;2) &quot;a&quot;3) &quot;c&quot;127.0.0.1:6379&gt; smembers key2</span><br><span class="line">1) &quot;e&quot;2) &quot;d&quot;3) &quot;c&quot;127.0.0.1:6379&gt; sdiff key1 key2   # 差集1) &quot;b&quot;2) &quot;a&quot;127.0.0.1:6379&gt; sinter key1 key2         # 交集1) &quot;c&quot;127.0.0.1:6379&gt; sunion key1 key2  # 并集1) &quot;e&quot;2) &quot;a&quot;3) &quot;c&quot;4) &quot;d&quot;5) &quot;b&quot;</span><br></pre>
+
+<h3 id="4、Hash-哈希"><a href="#4、Hash-哈希" class="headerlink" title="4、Hash(哈希)"></a>4、Hash(哈希)</h3><p>也是 key - value 形式的，但是value 是一个map。</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; hset myhash field xxx  # set 一个 key-value(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; hget myhash field   # 获取一个字段值&quot;xxx&quot;127.0.0.1:6379&gt; hmset myhash field1 hello field2 world  # set 多个 key-valueOK</span><br><span class="line">127.0.0.1:6379&gt; hmget myhash field field1 field2   # 获取多个字段值1) &quot;xxx&quot;2) &quot;hello&quot;3) &quot;world&quot;127.0.0.1:6379&gt; hgetall myhash    # 获取全部的数据1) &quot;field&quot;2) &quot;xxx&quot;3) &quot;field1&quot;4) &quot;hello&quot;5) &quot;field2&quot;6) &quot;world&quot;</span><br><span class="line">127.0.0.1:6379&gt; hdel myhash field1  # 删除指定的key，对应的value也就没有了(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; hgetall myhash</span><br><span class="line">1) &quot;field&quot;2) &quot;xxx&quot;3) &quot;field2&quot;4) &quot;world&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; hlen myhash  # 获取长度(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; hexists myhash field1   # 判断指定key是否存在(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; hexists myhash field2</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; hkeys myhash  # 获取所有的key1) &quot;field&quot;2) &quot;field2&quot;127.0.0.1:6379&gt; hvals myhash  # 获取所有的value1) &quot;xxx&quot;2) &quot;world&quot;127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; hset myhash field3 5</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; hincrby myhash field3 1  # 指定增量(integer) 6</span><br><span class="line">127.0.0.1:6379&gt; hincrby myhash field3 -1</span><br><span class="line">(integer) 5</span><br><span class="line">127.0.0.1:6379&gt; hsetnx myhash field4 hello  # 如果不存在则可以设置(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; hsetnx myhash field4 world  # 如果存在则不能设置(integer) 0</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>Hash 适合存储经常变动的对象信息，String 更适合于存储字符串。关注公众号Java技术栈，回复 Redis，可以获取我整理的 Redis 系列教程。</p>
+<h3 id="5、zset-有序集合"><a href="#5、zset-有序集合" class="headerlink" title="5、zset (有序集合)"></a>5、zset (有序集合)</h3><pre class="highlight"><span class="line">127.0.0.1:6379&gt; zadd myset 1 one  # 添加一个值(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zadd myset 2 two 3 three # 添加多个值(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; zrange myset 0 -1</span><br><span class="line">1) &quot;one&quot;2) &quot;two&quot;3) &quot;three&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<p>实现排序：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; zadd salary 2500 xiaohong</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zadd salary 5000 xiaoming</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zadd salary 500 xaiozhang</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zrange salary 0 -1</span><br><span class="line">1) &quot;xaiozhang&quot;2) &quot;xiaohong&quot;3) &quot;xiaoming&quot;127.0.0.1:6379&gt; zrangebyscore salary -inf +inf  # 从小到大显示全部的用户1) &quot;xaiozhang&quot;2) &quot;xiaohong&quot;3) &quot;xiaoming&quot;127.0.0.1:6379&gt; zrevrange salary 0 -1  # 从大到小进行排序1) &quot;xiaoming&quot;2) &quot;xiaohong&quot;3) &quot;xaiozhang&quot;127.0.0.1:6379&gt; zrangebyscore salary -inf +inf withscores   # 附带成绩的显示所有用户1) &quot;xaiozhang&quot;2) &quot;500&quot;3) &quot;xiaohong&quot;4) &quot;2500&quot;5) &quot;xiaoming&quot;6) &quot;5000&quot;127.0.0.1:6379&gt; zrangebyscore salary -inf 2500 withscores   # 显示工资小于 2500 的用户1) &quot;xaiozhang&quot;2) &quot;500&quot;3) &quot;xiaohong&quot;4) &quot;2500&quot;</span><br><span class="line">127.0.0.1:6379&gt; zrange salary 0 -1</span><br><span class="line">1) &quot;xaiozhang&quot;2) &quot;xiaohong&quot;3) &quot;xiaoming&quot;127.0.0.1:6379&gt; zrem salary xiaohong  # 移除特定元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zrange salary 0 -1</span><br><span class="line">1) &quot;xaiozhang&quot;2) &quot;xiaoming&quot;127.0.0.1:6379&gt; zcard salary  # 获取有序集合的个数(integer) 2</span><br><span class="line">127.0.0.1:6379&gt;</span><br><span class="line">127.0.0.1:6379&gt; zadd myset 1 hello</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zadd myset 2 world 3 !</span><br><span class="line">(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; zcount myset 1 3  # 获取指定区间的人员数量(integer) 3</span><br><span class="line">127.0.0.1:6379&gt; zcount myset 1 2</span><br><span class="line">(integer) 2</span><br></pre>
+
+<h3 id="6、geospatial"><a href="#6、geospatial" class="headerlink" title="6、geospatial"></a>6、geospatial</h3><p>Redis 在 3.2 推出 Geo 类型，该功能可以推算出地理位置信息，两地之间的距离。</p>
+<p>文档：<a target="_blank" rel="noopener" href="https://www.redis.net.cn/order/3687.html">https://www.redis.net.cn/order/3687.html</a></p>
+<p>借助网站模拟一些数据：<a target="_blank" rel="noopener" href="http://www.jsons.cn/lngcode/">http://www.jsons.cn/lngcode/</a></p>
+<blockquote>
+<p>geoadd 添加地理位置</p>
+</blockquote>
+<p>规则：两极无法直接添加，一般会下载城市数据，直接通过 Java 程序一次性导入。</p>
+<p>有效的经度从 -180 度到 180 度。有效的纬度从 -85.05112878 度到 85.05112878 度。当坐标位置超出指定范围时，该命令将会返回一个错误。</p>
+<pre class="highlight"><span class="line">(error) ERR invalid longitude latitude pair xxx yyy</span><br></pre>
+
+<p>添加一些模拟数据：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; geoadd china:city 116.40 39.90 beijing</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; geoadd china:city 121.47 31.23 shanghai</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; geoadd china:city 106.50 29.53 chongqing 114.05 22.52 shengzhen</span><br><span class="line">(integer) 2</span><br><span class="line">127.0.0.1:6379&gt; geoadd china:city 120.16 30.24 hangzhou 108.96 34.26 xian</span><br><span class="line">(integer) 2</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<blockquote>
+<p>geopos 获得当前定位坐标值</p>
+</blockquote>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; geopos china:city beijing  # 获得指定城市的经纬度1) 1) &quot;116.39999896287918091&quot;</span><br><span class="line">   2) &quot;39.90000009167092543&quot;127.0.0.1:6379&gt; geopos china:city shanghai</span><br><span class="line">1) 1) &quot;121.47000163793563843&quot;</span><br><span class="line">   2) &quot;31.22999903975783553&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<blockquote>
+<p>geodist 获取两个位置之间的距离</p>
+</blockquote>
+<p>单位：</p>
+<ul>
+<li><strong>m</strong> 表示单位为米。</li>
+<li><strong>km</strong> 表示单位为千米。</li>
+<li><strong>mi</strong> 表示单位为英里。</li>
+<li><strong>ft</strong> 表示单位为英尺。</li>
+</ul>
+<p>如果用户没有显式地指定单位参数， 那么 <code>GEODIST</code> 默认使用米作为单位。</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; geodist china:city beijing shanghai km # 查看北京和上海直接的直线距离&quot;1067.3788&quot;127.0.0.1:6379&gt; geodist china:city beijing chongqing km&quot;1464.0708&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<blockquote>
+<p>georedius 以给定的经纬度为中心，找出某一半径内的元素</p>
+</blockquote>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; georadius china:city 110 30 1000 km # 以110, 30 这个点为中心，寻找方圆 1000km 的城市1) &quot;chongqing&quot;2) &quot;xian&quot;3) &quot;shengzhen&quot;4) &quot;hangzhou&quot;127.0.0.1:6379&gt; georadius china:city 110 30 500 km </span><br><span class="line">1) &quot;chongqing&quot;2) &quot;xian&quot;127.0.0.1:6379&gt; georadius china:city 110 30 500 km withcoord #  显示他人的定位信息1) 1) &quot;chongqing&quot;</span><br><span class="line">   2) 1) &quot;106.49999767541885376&quot;</span><br><span class="line">      2) &quot;29.52999957900659211&quot;2) 1) &quot;xian&quot;</span><br><span class="line">   2) 1) &quot;108.96000176668167114&quot;</span><br><span class="line">      2) &quot;34.25999964418929977&quot;127.0.0.1:6379&gt; </span><br><span class="line">127.0.0.1:6379&gt; georadius china:city 110 30 500 km withdist #  显示到中心点的距离1) 1) &quot;chongqing&quot;</span><br><span class="line">   2) &quot;341.9374&quot;2) 1) &quot;xian&quot;</span><br><span class="line">   2) &quot;483.8340&quot;127.0.0.1:6379&gt; georadius china:city 110 30 500 km withdist withcoord count 1  # 指定数量1) 1) &quot;chongqing&quot;</span><br><span class="line">   2) &quot;341.9374&quot;</span><br><span class="line">   3) 1) &quot;106.49999767541885376&quot;</span><br><span class="line">      2) &quot;29.52999957900659211&quot;127.0.0.1:6379&gt; georadius china:city 110 30 500 km withdist withcoord count 2</span><br><span class="line">1) 1) &quot;chongqing&quot;</span><br><span class="line">   2) &quot;341.9374&quot;</span><br><span class="line">   3) 1) &quot;106.49999767541885376&quot;</span><br><span class="line">      2) &quot;29.52999957900659211&quot;2) 1) &quot;xian&quot;</span><br><span class="line">   2) &quot;483.8340&quot;</span><br><span class="line">   3) 1) &quot;108.96000176668167114&quot;</span><br><span class="line">      2) &quot;34.25999964418929977&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<blockquote>
+<p>GEORADIUSBYMEMBER 找出位于指定元素周围的其他元素</p>
+</blockquote>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; georadiusbymember china:city shanghai 1000 km</span><br><span class="line">1) &quot;hangzhou&quot;2) &quot;shanghai&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<blockquote>
+<p>geo 底层实现原理其实就是 zset ，可以使用 zset 命令操作 geo</p>
+</blockquote>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; zrange china:city 0 -1</span><br><span class="line">1) &quot;chongqing&quot;2) &quot;xian&quot;3) &quot;shengzhen&quot;4) &quot;hangzhou&quot;5) &quot;shanghai&quot;6) &quot;beijing&quot;127.0.0.1:6379&gt; zrem china:city beijing  # 删除一个元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; zrange china:city 0 -1</span><br><span class="line">1) &quot;chongqing&quot;2) &quot;xian&quot;3) &quot;shengzhen&quot;4) &quot;hangzhou&quot;5) &quot;shanghai&quot;127.0.0.1:6379&gt;</span><br></pre>
+
+<h3 id="7、hyperloglog"><a href="#7、hyperloglog" class="headerlink" title="7、hyperloglog"></a>7、hyperloglog</h3><p>基数：数学上集合的元素个数，是不能重复的。</p>
+<p>UV（Unique visitor）：是指通过互联网访问、浏览这个网页的自然人。访问的一个电脑客户端为一个访客，一天内同一个访客仅被计算一次。</p>
+<p>Redis 2.8.9 版本更新了 hyperloglog 数据结构，是基于基数统计的算法。</p>
+<p>hyperloglog 的优点是占用内存小，并且是固定的。存储 2^64 个不同元素的基数，只需要 12 KB 的空间。但是也可能有 0.81% 的错误率。</p>
+<p>这个数据结构常用于统计网站的 UV。传统的方式是使用 set 保存用户的ID，然后统计 set 中元素的数量作为判断标准。</p>
+<p>但是这种方式保存了大量的用户 ID，ID 一般比较长，占空间，还很麻烦。我们的目的是计数，不是保存数据，所以这样做有弊端。但是如果使用 hyperloglog 就比较合适了。</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; pfadd mykey a b c d e f g h i j # 创建第一组元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; PFCOUNT mykey     # 统计 mykey 基数(integer) 10</span><br><span class="line">127.0.0.1:6379&gt; PFADD mykey2 i j z x c v b n m  # 创建第二组元素(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; PFCOUNT mykey2     # 统计 mykey2 基数(integer) 9</span><br><span class="line">127.0.0.1:6379&gt; PFMERGE mykey3 mykey mykey2  # 合并两组 mykey mykey2 &#x3D;&gt; mykey3OK</span><br><span class="line">127.0.0.1:6379&gt; PFCOUNT mykey3</span><br><span class="line">(integer) 15</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<h3 id="8、bitmap-位图"><a href="#8、bitmap-位图" class="headerlink" title="8、bitmap 位图"></a>8、bitmap 位图</h3><p>bitmap就是通过最小的单位bit来进行0或者1的设置，表示某个元素对应的值或者状态。一个bit的值，或者是0，或者是1；也就是说一个bit能存储的最多信息是2。</p>
+<p>bitmap 常用于统计用户信息比如活跃粉丝和不活跃粉丝、登录和未登录、是否打卡等。</p>
+<p>这里使用一周打卡的案例说明其用法：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; setbit sign 0 1  # 周一打卡了(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 1 0  # 周二未打卡(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 2 0  # 周三未打卡(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 3 1</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 4 1</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 5 1</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt; setbit sign 6 0</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>查看某一天是否打卡：</p>
+<pre class="highlight"><span class="line">127.0.0.1:6379&gt; GETBIT sign 3</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; GETBIT sign 6</span><br><span class="line">(integer) 0</span><br><span class="line">127.0.0.1:6379&gt;</span><br></pre>
+
+<p>统计：统计打卡的天数</p>
+<pre class="highlight"><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt; BITCOUNT sign</span><br><span class="line">(integer) <span class="number">4</span></span><br><span class="line"><span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">6379</span>&gt;</span><br></pre>
+  </div>
+  <div>
+  
+  <div class="post-note note-warning copyright" style="margin-top: 42px">
+    <p><span style="font-weight: bold;">作者：</span><a target="_blank" rel="nofollow noopener noreferrer" href="https://12yuan.github.io/about">theme-kaze</a></p>
+    <p><span style="font-weight: bold;">文章链接：</span><a target="_blank" rel="nofollow noopener noreferrer" href="https://12yuan.github.io/2020/12/03/Redis%20%E7%9A%84%208%20%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">https://12yuan.github.io/2020/12/03/Redis%20%E7%9A%84%208%20%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</a></p>
+    <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+  </div>
+  
+  </div>
+</article>
+<div class="nav">
+  
+  
+  <div class="nav-item-next">
+    <a href="/2020/12/02/搞懂Nginx/" class="nav-link">
+      <div>
+        <div class="nav-label">下一篇</div>
+        
+        <div class="nav-title">弄懂nginx </div>
+        
+      </div>
+      <i class="iconfont icon-right nav-next-icon"></i>
+    </a>
+  </div>
+  
+</div>
+
+<div class="card card-content toc-card" id="mobiletoc">
+  <div class="toc-header"><i class="iconfont icon-menu" style="padding-right: 2px;"></i>目录</div>
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis-%E7%9A%84%E5%85%AB%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="toc-text">Redis 的八大数据类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis-key"><span class="toc-text">Redis-key</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81String%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%EF%BC%89"><span class="toc-text">1、String（字符串）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81List%EF%BC%88%E5%88%97%E8%A1%A8%EF%BC%89"><span class="toc-text">2、List（列表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%E3%80%81Set-%EF%BC%88%E9%9B%86%E5%90%88%EF%BC%89"><span class="toc-text">3、Set （集合）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4%E3%80%81Hash-%E5%93%88%E5%B8%8C"><span class="toc-text">4、Hash(哈希)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5%E3%80%81zset-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88"><span class="toc-text">5、zset (有序集合)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6%E3%80%81geospatial"><span class="toc-text">6、geospatial</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7%E3%80%81hyperloglog"><span class="toc-text">7、hyperloglog</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8%E3%80%81bitmap-%E4%BD%8D%E5%9B%BE"><span class="toc-text">8、bitmap 位图</span></a></li></ol></li></ol>
+</div></main>
+          <aside class="left-column">
+            
+            <div class="card card-author">
+              
+<img src="/img/Kaze.png" class="author-img">
+
+<p class="author-name">theme-kaze</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a class="author-posts-count" href="/archives">
+    <span>6</span>
+    <span>文章</span>
+  </a>
+  <a class="author-categories-count" href="/categories">
+    <span>3</span>
+    <span>分类</span>
+  </a>
+  <a class="author-tags-count" href="/tags">
+    <span>7</span>
+    <span>标签</span>
+  </a>
+</div>
+
+            </div>
+            
+            <div class="sticky-tablet">
+  
+  
+  <article class="display-when-two-columns spacer">
+    <div class="card card-content toc-card">
+      <div class="toc-header"><i class="iconfont icon-menu" style="padding-right: 2px;"></i>目录</div>
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis-%E7%9A%84%E5%85%AB%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="toc-text">Redis 的八大数据类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis-key"><span class="toc-text">Redis-key</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81String%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%EF%BC%89"><span class="toc-text">1、String（字符串）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81List%EF%BC%88%E5%88%97%E8%A1%A8%EF%BC%89"><span class="toc-text">2、List（列表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%E3%80%81Set-%EF%BC%88%E9%9B%86%E5%90%88%EF%BC%89"><span class="toc-text">3、Set （集合）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4%E3%80%81Hash-%E5%93%88%E5%B8%8C"><span class="toc-text">4、Hash(哈希)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5%E3%80%81zset-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88"><span class="toc-text">5、zset (有序集合)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6%E3%80%81geospatial"><span class="toc-text">6、geospatial</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7%E3%80%81hyperloglog"><span class="toc-text">7、hyperloglog</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8%E3%80%81bitmap-%E4%BD%8D%E5%9B%BE"><span class="toc-text">8、bitmap 位图</span></a></li></ol></li></ol>
+    </div>
+  </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header"><i class="iconfont icon-fenlei" style="padding-right: 2px;"></i>分类</div>
+  <div class="categories-list">
+    
+      <a href="/categories/me">
+        <div class="categories-list-item">
+          me
+          <span class="categories-list-item-badge">1</span>
+        </div>
+      </a>
+    
+      <a href="/categories/Linux">
+        <div class="categories-list-item">
+          Linux
+          <span class="categories-list-item-badge">2</span>
+        </div>
+      </a>
+    
+      <a href="/categories/Redis">
+        <div class="categories-list-item">
+          Redis
+          <span class="categories-list-item-badge">1</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header"><i class="iconfont icon-biaoqian" style="padding-right: 2px;"></i>热门标签</div>
+  <div class="tags-list">
+    
+    <a href="\tags\nginx" title="nginx"><div class="tags-list-item">nginx</div></a>
+    
+    <a href="\tags\数据类型" title="数据类型"><div class="tags-list-item">数据类型</div></a>
+    
+    <a href="\tags\Redis" title="Redis"><div class="tags-list-item">Redis</div></a>
+    
+    <a href="\tags\表单验证" title="表单验证"><div class="tags-list-item">表单验证</div></a>
+    
+    <a href="\tags\表格" title="表格"><div class="tags-list-item">表格</div></a>
+    
+    <a href="\tags\jQuery" title="jQuery"><div class="tags-list-item">jQuery</div></a>
+    
+    <a href="\tags\其他" title="其他"><div class="tags-list-item">其他</div></a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+          </aside>
+          <aside class="right-column">
+            <div class="sticky-widescreen">
+  
+  
+  <article class="card card-content toc-card">
+    <div class="toc-header"><i class="iconfont icon-menu" style="padding-right: 2px;"></i>目录</div>
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis-%E7%9A%84%E5%85%AB%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="toc-text">Redis 的八大数据类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Redis-key"><span class="toc-text">Redis-key</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81String%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%EF%BC%89"><span class="toc-text">1、String（字符串）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81List%EF%BC%88%E5%88%97%E8%A1%A8%EF%BC%89"><span class="toc-text">2、List（列表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%E3%80%81Set-%EF%BC%88%E9%9B%86%E5%90%88%EF%BC%89"><span class="toc-text">3、Set （集合）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4%E3%80%81Hash-%E5%93%88%E5%B8%8C"><span class="toc-text">4、Hash(哈希)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5%E3%80%81zset-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88"><span class="toc-text">5、zset (有序集合)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6%E3%80%81geospatial"><span class="toc-text">6、geospatial</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7%E3%80%81hyperloglog"><span class="toc-text">7、hyperloglog</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8%E3%80%81bitmap-%E4%BD%8D%E5%9B%BE"><span class="toc-text">8、bitmap 位图</span></a></li></ol></li></ol>
+  </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header"><i class="iconfont icon-wenzhang_huaban" style="padding-right: 2px;"></i>最近文章</div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2020-12-03</div>
+        <a href="/2020/12/03/Redis 的 8 大数据类型/"><div class="recent-posts-item-content">Redis</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2020-12-02</div>
+        <a href="/2020/12/02/搞懂Nginx/"><div class="recent-posts-item-content">弄懂nginx</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2020-11-26</div>
+        <a href="/2020/11/26/hexo搭建个人博客/"><div class="recent-posts-item-content">hexo框架搭建个人博客</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2020-11-20</div>
+        <a href="/2020/11/20/Linux安装mysql/"><div class="recent-posts-item-content">Linux安装mysql（mysql-5.7.23-1.el7.x86_64.rpm-bundle.tar）（万能解决登录问题，最详细教程）</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>Copyright ©
+          
+          2020 -
+          
+          2020
+        </span>
+        &nbsp;
+        <a href="/" class="footer-link">theme-kaze demo </a>
+      </div>
+    </div>
+
+    
+    <div class="footer-dsc">
+      
+      Powered by
+      <a href="https://hexo.io/" class="footer-link" target="_blank" rel="nofollow noopener noreferrer">&nbsp;Hexo </a>
+      
+      
+      <span>&nbsp;|&nbsp;</span>
+      
+      
+      Theme -
+      <a href="https://github.com/theme-kaze" class="footer-link" target="_blank"
+        rel="nofollow noopener noreferrer">&nbsp;Kaze</a>
+      
+    </div>
+    
+    
+    
+    
+</footer>
+  <a role="button" id="scrollbutton" class="basebutton"  aria-label="回到顶部">
+  <i class="iconfont icon-arrowleft button-icon"></i>
+</a>
+<a role="button" id="menubutton" class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a role="button" id="popbutton" class="basebutton" aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a role="button" id="darkbutton" class="basebutton darkwidget" aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a role="button" id="searchbutton" class="basebutton searchwidget" aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a>
+
+  
+  
+  
+  <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img');
+    var i;
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a');
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'));
+      wrapper.setAttribute('aria-label', 'illustration');
+      wrapper.style.cssText = 'width: 100%; display: flex; justify-content: center;';
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt;
+      wrapper.dataset.nolink = true;
+      img[i].before(wrapper);
+      wrapper.append(img[i]);
+      var divWrap = document.createElement('div');
+      divWrap.classList.add('gallery');
+      wrapper.before(divWrap);
+      divWrap.append(wrapper);
+    }
+    baguetteBox.run('.gallery');
+  }
+</script>
+<script>loadScript("/js/lib/lightbox/baguetteBox.min.js", addImgLayout)</script>
+  
+  
+  
+<script src="/js/main.js"></script>
+
+  
+  
+  <script>
+    var addLazyload = function () {
+      var observer = lozad('.lozad', {
+        load: function (el) {
+          el.srcset = el.getAttribute('data-src');
+        },
+        loaded: function (el) {
+          el.classList.add('loaded');
+        }
+      });
+      observer.observe();
+    }
+  </script>
+  <script>loadScript("/js/lib/lozad.min.js", addLazyload)</script>
+  
+  
+</body>
+
+</html>
